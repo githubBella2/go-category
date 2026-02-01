@@ -29,6 +29,54 @@ type Config struct {
 	DB_CONN string `mapstructure:"DB_CONN"`
 }
 
+// func main() {
+    
+//     viper.AutomaticEnv()
+//     viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+//     if _, err := os.Stat(".env"); err == nil {
+//         viper.SetConfigFile(".env")
+//         _ = viper.ReadInConfig()
+//     }
+    
+//     config := Config{
+//         Port:    viper.GetString("PORT"),
+//         DB_CONN: viper.GetString("DB_CONN"),
+//     }
+    
+//     // Set default port kalo kosong
+//     if config.Port == "" {
+//         config.Port = "8080"
+//     }
+    
+//     // Setup database
+//     db, err := database.InitDB(config.DB_CONN)
+//     if err != nil {
+//         log.Fatal("Failed to initialize database:", err)
+//     }
+//     defer db.Close()
+    
+//     categoryRepo := repositories.NewCategoryRepository(db)
+//     CategoryService := services.NewCategoryService(categoryRepo)
+//     CategoryHandler := handlers.NewCategoryHandler(CategoryService)
+    
+//     //setup route
+//     http.HandleFunc("/api/categories",  CategoryHandler.HandleCategories)
+//     http.HandleFunc("/api/categories/", CategoryHandler.HandleCategoryByID)
+    
+//     // DEBUG
+//     fmt.Println("PORT =", config.Port)
+    
+//     if config.DB_CONN == "" {
+//         log.Fatal("DB_CONN KOSONG — .env tidak terbaca")
+//     }
+    
+//     fmt.Printf("Server running on port %s\n", config.Port)
+//     err = http.ListenAndServe(":"+config.Port, nil)
+//     if err != nil {
+//         log.Fatal("Gagal running server:", err)
+//     }
+// }
+
 func main() {
     
     viper.AutomaticEnv()
@@ -60,11 +108,19 @@ func main() {
     CategoryHandler := handlers.NewCategoryHandler(CategoryService)
     
     //setup route
+    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+        w.WriteHeader(http.StatusOK)
+        w.Write([]byte("Categories API is running!"))
+    })
     http.HandleFunc("/api/categories",  CategoryHandler.HandleCategories)
     http.HandleFunc("/api/categories/", CategoryHandler.HandleCategoryByID)
     
     // DEBUG
     fmt.Println("PORT =", config.Port)
+    fmt.Println("✅ Routes registered:")
+    fmt.Println("  - / (health check)")
+    fmt.Println("  - /api/categories")
+    fmt.Println("  - /api/categories/")
     
     if config.DB_CONN == "" {
         log.Fatal("DB_CONN KOSONG — .env tidak terbaca")
