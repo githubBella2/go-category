@@ -30,6 +30,7 @@ type Config struct {
 }
 
 func main() {
+	
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 
