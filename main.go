@@ -30,76 +30,51 @@ type Config struct {
 }
 
 func main() {
-	
-	viper.AutomaticEnv()
-	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-	if _, err := os.Stat(".env"); err == nil {
-		viper.SetConfigFile(".env")
-		_ = viper.ReadInConfig()
-	}
-
-	config := Config{
-		Port:    viper.GetString("PORT"),
-		DB_CONN: viper.GetString("DB_CONN"),
-	}
-
-	// Setup database
-	db, err := database.InitDB(config.DB_CONN)
-	if err != nil {
-		log.Fatal("Failed to initialize database:", err)
-	}
-	defer db.Close()
-
-	categoryRepo := repositories.NewCategoryRepository(db)
-	CategoryService := services.NewCategoryService(categoryRepo)
-	CategoryHandler := handlers.NewCategoryHandler(CategoryService)
-
-	//setup route
-	http.HandleFunc("/api/categories", 	CategoryHandler.HandleCategories)
-	http.HandleFunc("/api/categories/", CategoryHandler.HandleCategoryByID)
-
-
-	// DEBUG WAJIB
-	fmt.Println("PORT =", config.Port)
-	fmt.Println("DB_CONN =", config.DB_CONN)
-
-	if config.DB_CONN == "" {
-		log.Fatal("DB_CONN KOSONG — .env tidak terbaca")
-	}
-
-	
-	// http.HandleFunc("/categories/", func(w http.ResponseWriter, r *http.Request) {
-	// 	if r.Method == http.MethodGet {
-	// 		getCategoryByID(w, r)
-
-	// 	} else if r.Method == http.MethodPut {
-	// 		updateCategory(w, r)
-
-	// 	}else if r.Method == http.MethodDelete {
-	// 		deleteCategory(w, r)
-	// 	}else {
-	// 		http.Error(w, "Method tidak diizinkan", http.StatusMethodNotAllowed)
-	// 	}
-	// })
-
-	// http.HandleFunc("/categories", func(w http.ResponseWriter, r *http.Request) {
-	// 	if r.Method == http.MethodGet {
-	// 		getCategories(w, r)
-
-	// 	} else if r.Method == http.MethodPost {
-	// 		createCategory(w, r)
-
-	// 	} else {
-	// 		http.Error(w, "Method tidak diizinkan", http.StatusMethodNotAllowed)
-	// 	}
-	// })
-
-	fmt.Println("Server running di localhost:8081")
-	err = http.ListenAndServe(":8081", nil)
-	if err != nil {
-		fmt.Println("gagal running server:", err)
-	}
+    
+    viper.AutomaticEnv()
+    viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+    if _, err := os.Stat(".env"); err == nil {
+        viper.SetConfigFile(".env")
+        _ = viper.ReadInConfig()
+    }
+    
+    config := Config{
+        Port:    viper.GetString("PORT"),
+        DB_CONN: viper.GetString("DB_CONN"),
+    }
+    
+    // Set default port kalo kosong
+    if config.Port == "" {
+        config.Port = "8080"
+    }
+    
+    // Setup database
+    db, err := database.InitDB(config.DB_CONN)
+    if err != nil {
+        log.Fatal("Failed to initialize database:", err)
+    }
+    defer db.Close()
+    
+    categoryRepo := repositories.NewCategoryRepository(db)
+    CategoryService := services.NewCategoryService(categoryRepo)
+    CategoryHandler := handlers.NewCategoryHandler(CategoryService)
+    
+    //setup route
+    http.HandleFunc("/api/categories",  CategoryHandler.HandleCategories)
+    http.HandleFunc("/api/categories/", CategoryHandler.HandleCategoryByID)
+    
+    // DEBUG
+    fmt.Println("PORT =", config.Port)
+    
+    if config.DB_CONN == "" {
+        log.Fatal("DB_CONN KOSONG — .env tidak terbaca")
+    }
+    
+    fmt.Printf("Server running on port %s\n", config.Port)
+    err = http.ListenAndServe(":"+config.Port, nil)
+    if err != nil {
+        log.Fatal("Gagal running server:", err)
+    }
 }
 
 // func getCategories(w http.ResponseWriter, r *http.Request) {
